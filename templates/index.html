@@ -82,10 +82,38 @@
             font-style: italic;
             margin: 5px 0;
         }
+        #upload-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        #upload-btn {
+            padding: 8px 15px;
+            background-color: #0f3460;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #upload-btn:hover {
+            background-color: #1a4a80;
+        }
+        #upload-status {
+            font-style: italic;
+            color: #c9a84c;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <h1>⚔️ Asistente de Aquelarre ⚔️</h1>
+    <div id="upload-area">
+        <input type="file" id="pdf-input" accept=".pdf" />
+        <button id="upload-btn">📄 Subir PDF</button>
+        <span id="upload-status"></span>
+    </div>
     <div id="chat"></div>
     <div id="pensando">El asistente está pensando...</div>
     <div id="input-area">
@@ -109,6 +137,29 @@
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
         }
+
+        async function subirPDF() {
+            const file = document.getElementById("pdf-input").files[0];
+            if (!file) return;
+
+            const status = document.getElementById("upload-status");
+            status.innerText = "Procesando PDF...";
+            document.getElementById("upload-btn").disabled = true;
+
+            const formData = new FormData();
+            formData.append("pdf", file);
+
+            const response = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            status.innerText = data.message || data.error;
+            document.getElementById("upload-btn").disabled = false;
+        }
+
+document.getElementById("upload-btn").addEventListener("click", subirPDF);
 
         async function enviarMensaje() {
             const pregunta = preguntaInput.value.trim();

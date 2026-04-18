@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, jsonify
 import ollama
 import os
 import fitz
+import shutil
+import time
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
@@ -66,6 +68,38 @@ def chat():
     historial.append({"role": "assistant", "content": respuesta})
 
     return jsonify({"respuesta": respuesta})
+
+@app.route("/upload", methods=["POST"])
+def upload():
+    global db
+
+    if "pdf" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files["pdf"]
+
+    if file.filename == "" or not file.filename.endswith(".pdf"):
+        return jsonify({"error": "Invalid file"}), 400
+
+    # Save the PDF
+    pdf_path = os.path.join(".", file.filename)
+    file.save(pdf_path)
+
+    # Process new PDF
+    print(f"Processing {file.filename}...")
+    doc = fitz.open(pdf_path)
+    texto_completo = ""
+    for pagina in doc:
+        texto_completo += pagina.get_text()
+
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    fragmentos = splitter.create_documents([texto_completo])
+
+    # Delete existing collection and recreate
+    db.delete_collection()
+    db = Chroma.from_documents(fragmentos, embeddings, persist_directory="./chroma_db")
+
+    return jsonify({"message": f"{file.filename} processed successfully"})
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -34,9 +34,9 @@ else:
 print("Ready!\n")
 
 # Chat history with system prompt
-historial = [{"role": "system", "content": """You are an expert assistant for the Aquelarre tabletop RPG.
-Answer based on the information provided from the manual.
-Always respond in Spanish."""}]
+historial = [{"role": "system", "content": """You are a helpful assistant that answers questions based on the provided document.
+Always base your answers on the document content.
+If the question is conversational, respond naturally and friendly."""}]
 
 def is_conversational(pregunta):
     """Check if the message is a casual greeting or conversational message."""
